@@ -1,22 +1,26 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function getCompanyStats(companyId: number, userRole?: string, userEmail?: string) {
+  // Active loans query - join with clients to filter by company
   let activeLoansQuery = supabase
     .from('loans')
     .select('*', { count: 'exact', head: true })
     .eq('loan_status', 'Active')
-    .eq('company_id', companyId);
+    .eq('clients.company_id', companyId)
+    .not('clients', 'is', null);
 
   let clientsQuery = supabase
     .from('clients')
     .select('*', { count: 'exact', head: true })
     .eq('company_id', companyId);
 
+  // Pending loans query - join with clients to filter by company
   let pendingLoansQuery = supabase
     .from('loans')
     .select('*', { count: 'exact', head: true })
     .eq('loan_status', 'Pending')
-    .eq('company_id', companyId);
+    .eq('clients.company_id', companyId)
+    .not('clients', 'is', null);
 
   // Add manager-specific filters if needed
   if (userRole === 'manager' && userEmail) {
@@ -48,11 +52,13 @@ export async function getRecentApplications(companyId: number, userRole?: string
       loan_status,
       clients (
         first_name,
-        last_name
+        last_name,
+        company_id
       )
     `)
     .eq('loan_status', 'Pending')
-    .eq('company_id', companyId);
+    .eq('clients.company_id', companyId)
+    .not('clients', 'is', null);
 
   // Add manager-specific filter if needed
   if (userRole === 'manager' && userEmail) {
@@ -60,7 +66,7 @@ export async function getRecentApplications(companyId: number, userRole?: string
   }
 
   const { data: applications, error } = await query
-    .order('id', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(5);
 
   if (error) {
@@ -90,7 +96,7 @@ export async function getRecentClients(companyId: number, userRole?: string, use
   }
 
   const { data: clients, error } = await query
-    .order('id', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(5);
 
   if (error) {
