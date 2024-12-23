@@ -42,8 +42,11 @@ export const fetchLoanData = async (loanId: number): Promise<LoanData> => {
     throw new Error('Missing required loan data (tenor or interest)');
   }
 
+  // Get the first tenor record since it's returned as an array
+  const tenor = Array.isArray(loan.loan_tenor) ? loan.loan_tenor[0] : loan.loan_tenor;
+  
   // Cast the duration_period to Period type after validating it's a valid value
-  const duration_period = loan.loan_tenor.duration_period as Period;
+  const duration_period = tenor.duration_period as Period;
   if (!['Week', 'Month', 'Year', 'Profit Margin'].includes(duration_period)) {
     throw new Error(`Invalid duration period: ${duration_period}`);
   }
@@ -60,7 +63,7 @@ export const fetchLoanData = async (loanId: number): Promise<LoanData> => {
   const loanData: LoanData = {
     principal: loan.principal,
     tenor: {
-      duration: loan.loan_tenor.duration,
+      duration: tenor.duration,
       duration_period
     },
     interest: {
