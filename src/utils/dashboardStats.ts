@@ -42,12 +42,10 @@ export async function getRecentApplications(companyId: number, userRole?: string
   let query = supabase
     .from('loans')
     .select(`
-      id,
       loan_id,
       principal,
       created_at,
       loan_status,
-      loan_applicant_email,
       clients (
         first_name,
         last_name
@@ -61,9 +59,14 @@ export async function getRecentApplications(companyId: number, userRole?: string
     query = query.eq('loan_applicant_email', userEmail);
   }
 
-  const { data: applications } = await query
+  const { data: applications, error } = await query
     .order('id', { ascending: false })
     .limit(5);
+
+  if (error) {
+    console.error("Error fetching recent applications:", error);
+    throw error;
+  }
 
   return applications || [];
 }
@@ -86,9 +89,14 @@ export async function getRecentClients(companyId: number, userRole?: string, use
     query = query.eq('onboarding_officer', userEmail);
   }
 
-  const { data: clients } = await query
+  const { data: clients, error } = await query
     .order('id', { ascending: false })
     .limit(5);
+
+  if (error) {
+    console.error("Error fetching recent clients:", error);
+    throw error;
+  }
 
   if (!clients) return [];
 
