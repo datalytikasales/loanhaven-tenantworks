@@ -1,18 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
-import { File, Users, FileText } from "lucide-react";
-import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { CompanyDashboardLayout } from "@/components/company/CompanyDashboardLayout";
-import { StatsCard } from "@/components/dashboard/StatsCard";
-import { RecentApplicationsList } from "@/components/dashboard/RecentApplicationsList";
-import { RecentClientsList } from "@/components/dashboard/RecentClientsList";
-import { getCompanyStats, getRecentApplications, getRecentClients } from "@/utils/dashboardStats";
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { File, Users, FileText } from 'lucide-react';
+import { CompanyDashboardLayout } from '@/components/company/CompanyDashboardLayout';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { RecentApplicationsList } from '@/components/dashboard/RecentApplicationsList';
+import { RecentClientsList } from '@/components/dashboard/RecentClientsList';
+import { getCompanyStats, getRecentApplications, getRecentClients } from '@/utils/dashboardStats';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ManagerDashboard() {
   const { companyUsername } = useParams();
   const userEmail = localStorage.getItem("userEmail");
 
-  // Get company ID
+  // First get the company ID
   const { data: company } = useQuery({
     queryKey: ['company', companyUsername],
     queryFn: async () => {
@@ -27,27 +27,33 @@ export default function ManagerDashboard() {
     }
   });
 
-  // Fetch manager-specific dashboard data
+  // Then fetch all dashboard data
   const { data: stats } = useQuery({
-    queryKey: ['manager-stats', company?.id, userEmail],
-    queryFn: () => getCompanyStats(company!.id, 'manager', userEmail!),
+    queryKey: ['company-stats', company?.id, userEmail],
+    queryFn: () => getCompanyStats(company!.id, 'manager', userEmail),
     enabled: !!company?.id && !!userEmail
   });
 
   const { data: recentApplications } = useQuery({
-    queryKey: ['manager-recent-applications', company?.id, userEmail],
-    queryFn: () => getRecentApplications(company!.id, 'manager', userEmail!),
+    queryKey: ['recent-applications', company?.id, userEmail],
+    queryFn: () => getRecentApplications(company!.id, 'manager', userEmail),
     enabled: !!company?.id && !!userEmail
   });
 
   const { data: recentClients } = useQuery({
-    queryKey: ['manager-recent-clients', company?.id, userEmail],
-    queryFn: () => getRecentClients(company!.id, 'manager', userEmail!),
+    queryKey: ['recent-clients', company?.id, userEmail],
+    queryFn: () => getRecentClients(company!.id, 'manager', userEmail),
     enabled: !!company?.id && !!userEmail
   });
 
   if (!stats || !recentApplications || !recentClients) {
-    return <div>Loading...</div>;
+    return (
+      <CompanyDashboardLayout userRole="manager">
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-500">Loading dashboard data...</p>
+        </div>
+      </CompanyDashboardLayout>
+    );
   }
 
   return (
