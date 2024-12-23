@@ -8,11 +8,11 @@ export const fetchLoanData = async (loanId: number): Promise<LoanData> => {
     .from('loans')
     .select(`
       principal,
-      loan_tenor!inner (
+      loan_tenor (
         duration,
         duration_period
       ),
-      interest!inner (
+      interest (
         interest_rate,
         interest_period,
         interest_model,
@@ -33,11 +33,11 @@ export const fetchLoanData = async (loanId: number): Promise<LoanData> => {
 
   console.log('Raw loan data from database:', loan);
 
-  // Ensure we have both tenor and interest data
-  if (!loan.loan_tenor?.[0] || !loan.interest?.[0]) {
+  // Check if we have both tenor and interest data
+  if (!loan.loan_tenor || !loan.interest) {
     console.error('Missing required loan data:', {
-      hasTenor: !!loan.loan_tenor?.[0],
-      hasInterest: !!loan.interest?.[0]
+      hasTenor: !!loan.loan_tenor,
+      hasInterest: !!loan.interest
     });
     throw new Error('Missing required loan data (tenor or interest)');
   }
@@ -55,10 +55,10 @@ export const fetchLoanData = async (loanId: number): Promise<LoanData> => {
       duration_period
     },
     interest: {
-      interest_rate: loan.interest[0].interest_rate,
-      interest_period: loan.interest[0].interest_period as Period,
-      interest_model: loan.interest[0].interest_model,
-      repayment_installment: loan.interest[0].repayment_installment
+      interest_rate: loan.interest.interest_rate,
+      interest_period: loan.interest.interest_period as Period,
+      interest_model: loan.interest.interest_model,
+      repayment_installment: loan.interest.repayment_installment
     }
   };
 
