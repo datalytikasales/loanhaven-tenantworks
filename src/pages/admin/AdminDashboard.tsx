@@ -28,19 +28,19 @@ export default function AdminDashboard() {
   // Then fetch all dashboard data
   const { data: stats } = useQuery({
     queryKey: ['company-stats', company?.id],
-    queryFn: () => getCompanyStats(company!.id),
+    queryFn: () => getCompanyStats(company!.id, 'admin'),
     enabled: !!company?.id
   });
 
   const { data: recentApplications } = useQuery({
     queryKey: ['recent-applications', company?.id],
-    queryFn: () => getRecentApplications(company!.id),
+    queryFn: () => getRecentApplications(company!.id, 'admin'),
     enabled: !!company?.id
   });
 
   const { data: recentClients } = useQuery({
     queryKey: ['recent-clients', company?.id],
-    queryFn: () => getRecentClients(company!.id),
+    queryFn: () => getRecentClients(company!.id, 'admin'),
     enabled: !!company?.id
   });
 
