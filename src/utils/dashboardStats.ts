@@ -1,26 +1,34 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function getCompanyStats(companyId: number, userRole?: string, userEmail?: string) {
-  // Active loans query - join with clients to filter by company
+  // Active loans query - using proper join syntax
   let activeLoansQuery = supabase
     .from('loans')
-    .select('*', { count: 'exact', head: true })
+    .select(`
+      *,
+      clients!inner (
+        company_id
+      )
+    `, { count: 'exact', head: true })
     .eq('loan_status', 'Active')
-    .eq('clients.company_id', companyId)
-    .not('clients', 'is', null);
+    .eq('clients.company_id', companyId);
 
   let clientsQuery = supabase
     .from('clients')
     .select('*', { count: 'exact', head: true })
     .eq('company_id', companyId);
 
-  // Pending loans query - join with clients to filter by company
+  // Pending loans query - using proper join syntax
   let pendingLoansQuery = supabase
     .from('loans')
-    .select('*', { count: 'exact', head: true })
+    .select(`
+      *,
+      clients!inner (
+        company_id
+      )
+    `, { count: 'exact', head: true })
     .eq('loan_status', 'Pending')
-    .eq('clients.company_id', companyId)
-    .not('clients', 'is', null);
+    .eq('clients.company_id', companyId);
 
   // Add manager-specific filters if needed
   if (userRole === 'manager' && userEmail) {
@@ -50,15 +58,14 @@ export async function getRecentApplications(companyId: number, userRole?: string
       principal,
       created_at,
       loan_status,
-      clients (
+      clients!inner (
         first_name,
         last_name,
         company_id
       )
     `)
     .eq('loan_status', 'Pending')
-    .eq('clients.company_id', companyId)
-    .not('clients', 'is', null);
+    .eq('clients.company_id', companyId);
 
   // Add manager-specific filter if needed
   if (userRole === 'manager' && userEmail) {
