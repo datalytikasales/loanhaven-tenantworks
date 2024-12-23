@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { LoanData, Period } from "./loanTypes";
+import { LoanData, Period, InterestModel, RepaymentSchedule } from "./loanTypes";
 
 export const fetchLoanData = async (loanId: number): Promise<LoanData> => {
   console.log('Fetching loan data for ID:', loanId);
@@ -43,22 +43,31 @@ export const fetchLoanData = async (loanId: number): Promise<LoanData> => {
   }
 
   // Cast the duration_period to Period type after validating it's a valid value
-  const duration_period = loan.loan_tenor[0].duration_period as Period;
+  const duration_period = loan.loan_tenor.duration_period as Period;
   if (!['Week', 'Month', 'Year', 'Profit Margin'].includes(duration_period)) {
     throw new Error(`Invalid duration period: ${duration_period}`);
+  }
+
+  // Validate interest_model and repayment_installment
+  if (!['Normal Simple Interest Model', 'Reducing Balance Model'].includes(loan.interest.interest_model)) {
+    throw new Error(`Invalid interest model: ${loan.interest.interest_model}`);
+  }
+
+  if (!['Weekly', 'Monthly', 'Yearly', 'One Whole Installment'].includes(loan.interest.repayment_installment)) {
+    throw new Error(`Invalid repayment installment: ${loan.interest.repayment_installment}`);
   }
 
   const loanData: LoanData = {
     principal: loan.principal,
     tenor: {
-      duration: loan.loan_tenor[0].duration,
+      duration: loan.loan_tenor.duration,
       duration_period
     },
     interest: {
       interest_rate: loan.interest.interest_rate,
       interest_period: loan.interest.interest_period as Period,
-      interest_model: loan.interest.interest_model,
-      repayment_installment: loan.interest.repayment_installment
+      interest_model: loan.interest.interest_model as InterestModel,
+      repayment_installment: loan.interest.repayment_installment as RepaymentSchedule
     }
   };
 
